@@ -1,55 +1,74 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTask, updateTask, deleteTask, addSubtask, toggleSubtask, deleteSubtask, getHistory, deleteHistory, updateSubtask, clearHistory, getProjects } from '../services/api';
+import { getTask, updateTask, deleteTask, addSubtask, updateSubtaskStatus, deleteSubtask, getHistory, deleteHistory, updateSubtask, clearHistory, getProjects } from '../services/api';
 import { FaArrowLeft, FaTrash, FaCheck, FaHistory, FaPlus, FaTimes, FaEdit, FaSearch, FaCalendar, FaTag, FaFolder } from 'react-icons/fa';
 import { format, isBefore, isToday } from 'date-fns';
 
 const SubtaskItem = ({ sub, onToggle, onDelete, onEdit }) => {
-    const priorityColors = {
-        'High': 'var(--danger)',
-        'Medium': 'var(--warning)',
-        'Low': 'var(--success)'
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'Done': return 'var(--success)';
+            case 'In Progress': return 'var(--warning)';
+            default: return 'var(--text-muted)'; // Todo
+        }
     };
+
+    const statusColor = getStatusColor(sub.status || 'Todo');
 
     return (
         <div style={{
             display: 'flex', flexDirection: 'column',
-            padding: '1rem', background: 'var(--background)', borderRadius: 'var(--radius-md)',
+            padding: '1rem',
+            background: 'var(--background)',
+            borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border)',
-            borderLeft: `4px solid ${priorityColors[sub.priority] || 'var(--border)'}`,
-            opacity: sub.isCompleted ? 0.7 : 1,
+            borderLeft: `4px solid ${statusColor}`,
+            opacity: sub.status === 'Done' ? 0.8 : 1,
             transition: 'all 0.2s ease',
             position: 'relative',
             minWidth: 0,
             maxWidth: '100%',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
         }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.5rem' }}>
-                <button
-                    onClick={(e) => { e.stopPropagation(); onToggle(sub._id); }}
-                    style={{
-                        background: sub.isCompleted ? 'var(--success)' : 'transparent',
-                        border: '2px solid var(--border)',
-                        width: '24px', height: '24px', borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: 'white', padding: 0, marginTop: '0.1rem', flexShrink: 0,
-                        cursor: 'pointer',
-                        transition: 'background 0.2s'
-                    }}
-                >
-                    {sub.isCompleted && <FaCheck size={12} />}
-                </button>
-
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <span style={{
-                            textDecoration: sub.isCompleted ? 'line-through' : 'none',
+                            textDecoration: sub.status === 'Done' ? 'line-through' : 'none',
                             fontWeight: '600', fontSize: '1.1rem', color: 'var(--text-main)',
                             wordBreak: 'break-word'
                         }}>
                             {sub.title}
                         </span>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <select
+                                value={sub.status || 'Todo'}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    onToggle(sub._id, e.target.value);
+                                }}
+                                style={{
+                                    padding: '0.35rem 0.85rem',
+                                    fontSize: '0.75rem',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: sub.status === 'Done' ? 'var(--success)' : sub.status === 'In Progress' ? 'var(--warning)' : 'var(--surface-hover)',
+                                    color: sub.status === 'Done' ? '#fff' : sub.status === 'In Progress' ? '#000' : 'var(--text-main)',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    outline: 'none',
+                                    appearance: 'none',
+                                    textAlign: 'center',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                    minWidth: '85px'
+                                }}
+                            >
+                                <option value="Todo" style={{ color: 'var(--text-main)', background: 'var(--surface)' }}>Todo</option>
+                                <option value="In Progress" style={{ color: 'var(--text-main)', background: 'var(--surface)' }}>In Progress</option>
+                                <option value="Done" style={{ color: 'var(--text-main)', background: 'var(--surface)' }}>Done</option>
+                            </select>
                             <button onClick={(e) => { e.stopPropagation(); onEdit(sub); }} className="btn-icon" style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none' }}>
                                 <FaEdit />
                             </button>
@@ -58,14 +77,28 @@ const SubtaskItem = ({ sub, onToggle, onDelete, onEdit }) => {
                             </button>
                         </div>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>
-                        {sub.createdAt ? format(new Date(sub.createdAt), 'MMM d, h:mm a') : 'Just now'}
-                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        {sub.dueDate && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: isBefore(new Date(sub.dueDate), new Date()) && !isToday(new Date(sub.dueDate)) && sub.status !== 'Done' ? 'var(--danger)' : 'inherit', fontWeight: isBefore(new Date(sub.dueDate), new Date()) && !isToday(new Date(sub.dueDate)) && sub.status !== 'Done' ? '600' : 'normal' }}>
+                                <FaCalendar size={10} /> Due: {format(new Date(sub.dueDate), 'do MMM yyyy')}
+                            </span>
+                        )}
+                        {sub.createdAt && (
+                            <span title={`Created: ${format(new Date(sub.createdAt), 'PPpp')}`}>
+                                Created: {format(new Date(sub.createdAt), 'do MMM yyyy')}
+                            </span>
+                        )}
+                        {sub.updatedAt && sub.updatedAt !== sub.createdAt && (
+                            <span title={`Updated: ${format(new Date(sub.updatedAt), 'PPpp')}`}>
+                                Updated: {format(new Date(sub.updatedAt), 'do MMM yyyy')}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {sub.description && (
-                <div style={{ marginLeft: '2.5rem', minWidth: 0 }}>
+                <div style={{ marginLeft: '0.5rem', minWidth: 0 }}>
                     <p style={{
                         margin: 0, fontSize: '0.95rem', color: 'var(--text-muted)',
                         whiteSpace: 'pre-wrap',
@@ -88,7 +121,8 @@ const TaskDetail = () => {
     const [history, setHistory] = useState([]);
     const [newSubtask, setNewSubtask] = useState('');
     const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
-    const [newSubtaskPriority, setNewSubtaskPriority] = useState('Medium');
+    const [newSubtaskDueDate, setNewSubtaskDueDate] = useState('');
+
     const [subtaskSearch, setSubtaskSearch] = useState('');
     const [subtaskSort, setSubtaskSort] = useState('Newest');
     const [isEditing, setIsEditing] = useState(false);
@@ -133,7 +167,8 @@ const TaskDetail = () => {
         setEditingSubtask(null);
         setNewSubtask('');
         setNewSubtaskDescription('');
-        setNewSubtaskPriority('Medium');
+        setNewSubtask('');
+        setNewSubtaskDescription('');
         setIsSubtaskModalOpen(true);
     };
 
@@ -141,7 +176,7 @@ const TaskDetail = () => {
         setEditingSubtask(sub);
         setNewSubtask(sub.title);
         setNewSubtaskDescription(sub.description || '');
-        setNewSubtaskPriority(sub.priority || 'Medium');
+        setNewSubtaskDueDate(sub.dueDate ? sub.dueDate.split('T')[0] : '');
         setIsSubtaskModalOpen(true);
     };
 
@@ -154,15 +189,15 @@ const TaskDetail = () => {
                 await updateSubtask(id, editingSubtask._id, {
                     title: newSubtask,
                     description: newSubtaskDescription,
-                    priority: newSubtaskPriority
+                    dueDate: newSubtaskDueDate
                 });
             } else {
-                await addSubtask(id, newSubtask, newSubtaskDescription, newSubtaskPriority);
+                await addSubtask(id, newSubtask, newSubtaskDescription, 'Medium', newSubtaskDueDate);
             }
 
             setNewSubtask('');
             setNewSubtaskDescription('');
-            setNewSubtaskPriority('Medium');
+            setNewSubtaskDueDate('');
             setEditingSubtask(null);
             setIsSubtaskModalOpen(false);
             loadData();
@@ -182,18 +217,14 @@ const TaskDetail = () => {
         return filtered.sort((a, b) => {
             if (subtaskSort === 'Newest') return new Date(b.createdAt) - new Date(a.createdAt);
             if (subtaskSort === 'Oldest') return new Date(a.createdAt) - new Date(b.createdAt);
-            if (subtaskSort === 'Priority') {
-                const priorityMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
-                return priorityMap[b.priority] - priorityMap[a.priority];
-            }
             return 0;
         });
     };
 
     const filteredSubtasks = getFilteredSubtasks();
 
-    const handleToggleSubtask = async (subtaskId) => {
-        await toggleSubtask(id, subtaskId);
+    const handleToggleSubtask = async (subtaskId, newStatus) => {
+        await updateSubtaskStatus(id, subtaskId, newStatus);
         loadData();
     };
 
@@ -243,18 +274,25 @@ const TaskDetail = () => {
                     <div className="card">
                         {isEditing ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <input
-                                    className="input"
-                                    value={editForm.title}
-                                    onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-                                />
-                                <textarea
-                                    className="input"
-                                    rows="3"
-                                    value={editForm.description}
-                                    onChange={e => setEditForm({ ...editForm, description: e.target.value })}
-                                />
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Title</label>
+                                    <input
+                                        className="input"
+                                        value={editForm.title}
+                                        onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Description</label>
+                                    <textarea
+                                        className="input"
+                                        rows="3"
+                                        value={editForm.description}
+                                        onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Status</label>
                                     <select
                                         className="input"
                                         value={editForm.status}
@@ -263,15 +301,6 @@ const TaskDetail = () => {
                                         <option>Todo</option>
                                         <option>In Progress</option>
                                         <option>Done</option>
-                                    </select>
-                                    <select
-                                        className="input"
-                                        value={editForm.priority}
-                                        onChange={e => setEditForm({ ...editForm, priority: e.target.value })}
-                                    >
-                                        <option>Low</option>
-                                        <option>Medium</option>
-                                        <option>High</option>
                                     </select>
                                 </div>
                                 <div style={{ marginBottom: '1rem' }}>
@@ -322,38 +351,46 @@ const TaskDetail = () => {
                                         </div>
                                     </div>
 
+
+
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
                                         <span className={`badge badge-${task.status.toLowerCase().replace(' ', '-')}`} style={{ fontSize: '0.85rem', padding: '0.35rem 0.85rem' }}>{task.status}</span>
-                                        <span className="badge" style={{ border: '1px solid var(--border)', fontSize: '0.85rem', padding: '0.35rem 0.85rem' }}>{task.priority} Priority</span>
                                         {task.project && (
                                             <span className="badge" style={{ background: task.project.color, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', padding: '0.35rem 0.85rem' }}>
                                                 <FaFolder size={12} /> {task.project.name}
                                             </span>
                                         )}
+                                        {task.dueDate && (
+                                            <span style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.35rem',
+                                                padding: '0.35rem 0.85rem',
+                                                background: 'var(--background)',
+                                                border: '1px solid var(--border)',
+                                                borderRadius: 'var(--radius-full)',
+                                                fontSize: '0.85rem',
+                                                color: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? 'var(--danger)' : 'var(--text-muted)',
+                                                fontWeight: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? '600' : 'normal'
+                                            }}>
+                                                <FaCalendar size={12} />
+                                                <span>Due: {format(new Date(task.dueDate), 'do MMM yyyy')}</span>
+                                                {task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' && (
+                                                    <span>(Overdue)</span>
+                                                )}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.9rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                                        {task.dueDate && (
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                color: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? 'var(--danger)' : 'var(--text-muted)',
-                                            }}>
-                                                <FaCalendar />
-                                                <span>Due: {format(new Date(task.dueDate), 'MMM dd, yyyy')}</span>
-                                                {task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' && (
-                                                    <span style={{ color: 'var(--danger)', fontWeight: '600' }}>(Overdue)</span>
-                                                )}
-                                            </div>
-                                        )}
+
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <FaCalendar />
-                                            <span>Created: {format(new Date(task.createdAt), 'MMM dd, yyyy h:mm a')}</span>
+                                            <span>Created: {format(new Date(task.createdAt), 'do MMM yyyy')}</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <FaCalendar />
-                                            <span>Updated: {format(new Date(task.updatedAt), 'MMM dd, yyyy h:mm a')}</span>
+                                            <span>Updated: {format(new Date(task.updatedAt), 'do MMM yyyy')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -431,7 +468,6 @@ const TaskDetail = () => {
                                 >
                                     <option value="Newest">Newest</option>
                                     <option value="Oldest">Oldest</option>
-                                    <option value="Priority">Priority</option>
                                 </select>
                             </div>
                         </div>
@@ -449,7 +485,7 @@ const TaskDetail = () => {
                             {filteredSubtasks.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No subtasks found.</p>}
                         </div>
                     </div>
-                </div >
+                </div>
 
                 {/* History Sidebar */}
                 <div className="card history-card">
@@ -483,7 +519,7 @@ const TaskDetail = () => {
                                         </div>
                                         <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>{item.details}</p>
                                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', opacity: 0.7, display: 'block', marginTop: '0.5rem' }}>
-                                            {format(new Date(item.timestamp), 'MMM d, h:mm a')}
+                                            {format(new Date(item.timestamp), 'do MMM yyyy')}
                                         </span>
                                     </div>
                                 </div>
@@ -499,49 +535,52 @@ const TaskDetail = () => {
             </div>
 
             {/* Add/Edit Subtask Modal */}
-            {isSubtaskModalOpen && (
-                <div className="modal-overlay" onClick={(e) => {
-                    if (e.target.className === 'modal-overlay') setIsSubtaskModalOpen(false);
-                }}>
-                    <div className="modal-content">
-                        <div className="modal-handle"></div>
-                        <h3 style={{ marginTop: 0 }}>{editingSubtask ? 'Edit Subtask' : 'Add New Subtask'}</h3>
-                        <form onSubmit={handleSubtaskSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <input
-                                className="input"
-                                placeholder="Subtask Title"
-                                value={newSubtask}
-                                onChange={e => setNewSubtask(e.target.value)}
-                                required
-                            />
-                            <textarea
-                                className="input"
-                                placeholder="Subtask Details (Optional)"
-                                rows="8"
-                                value={newSubtaskDescription}
-                                onChange={e => setNewSubtaskDescription(e.target.value)}
-                            />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <select
+            {
+                isSubtaskModalOpen && (
+                    <div className="modal-overlay" onClick={(e) => {
+                        if (e.target.className === 'modal-overlay') setIsSubtaskModalOpen(false);
+                    }}>
+                        <div className="modal-content">
+                            <div className="modal-handle"></div>
+                            <h3 style={{ marginTop: 0 }}>{editingSubtask ? 'Edit Subtask' : 'Add New Subtask'}</h3>
+                            <form onSubmit={handleSubtaskSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <input
                                     className="input"
-                                    style={{ width: '150px' }}
-                                    value={newSubtaskPriority}
-                                    onChange={e => setNewSubtaskPriority(e.target.value)}
-                                >
-                                    <option value="Low">Low Priority</option>
-                                    <option value="Medium">Medium Priority</option>
-                                    <option value="High">High Priority</option>
-                                </select>
+                                    placeholder="Subtask Title"
+                                    value={newSubtask}
+                                    onChange={e => setNewSubtask(e.target.value)}
+                                    required
+                                />
+                                <textarea
+                                    className="input"
+                                    placeholder="Subtask Details (Optional)"
+                                    rows="8"
+                                    value={newSubtaskDescription}
+                                    onChange={e => setNewSubtaskDescription(e.target.value)}
+                                />
                                 <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <button type="button" onClick={() => setIsSubtaskModalOpen(false)} className="btn btn-secondary">Cancel</button>
-                                    <button type="submit" className="btn btn-primary">{editingSubtask ? 'Save Changes' : 'Add Subtask'}</button>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Due Date</label>
+                                        <input
+                                            type="date"
+                                            className="input"
+                                            value={newSubtaskDueDate}
+                                            onChange={e => setNewSubtaskDueDate(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                        <button type="button" onClick={() => setIsSubtaskModalOpen(false)} className="btn btn-secondary">Cancel</button>
+                                        <button type="submit" className="btn btn-primary">{editingSubtask ? 'Save Changes' : 'Add Subtask'}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

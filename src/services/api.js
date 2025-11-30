@@ -27,14 +27,13 @@ export const deleteTask = async (id) => {
     return response.data;
 };
 
-export const addSubtask = async (taskId, title, description, priority) => {
-    const response = await axios.post(`${API_URL}/${taskId}/subtasks`, { title, description, priority });
+export const addSubtask = async (taskId, title, description, priority, dueDate) => {
+    const response = await axios.post(`${API_URL}/${taskId}/subtasks`, { title, description, priority, dueDate });
     return response.data;
 };
 
-export const toggleSubtask = async (taskId, subtaskId) => {
-    // Send empty body to trigger backend toggle logic
-    const response = await axios.put(`${API_URL}/${taskId}/subtasks/${subtaskId}`, {});
+export const updateSubtaskStatus = async (taskId, subtaskId, status) => {
+    const response = await axios.put(`${API_URL}/${taskId}/subtasks/${subtaskId}`, { status });
     return response.data;
 };
 

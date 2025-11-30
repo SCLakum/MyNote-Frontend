@@ -1,27 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getAnalyticsSummary, getAnalyticsPriority, getAnalyticsDaily } from '../services/api';
-import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { FaTasks, FaCheckCircle, FaClock, FaExclamationCircle, FaArrowRight, FaPlus } from 'react-icons/fa';
+import { getAnalyticsSummary } from '../services/api';
+import { FaTasks, FaCheckCircle, FaClock, FaExclamationCircle, FaArrowRight } from 'react-icons/fa';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [summary, setSummary] = useState({ totalTasks: 0, completedTasks: 0, pendingTasks: 0, overdueTasks: 0 });
-    const [priorityData, setPriorityData] = useState([]);
-    const [dailyData, setDailyData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadAnalytics = async () => {
             try {
-                const [summaryData, priorityData, dailyData] = await Promise.all([
-                    getAnalyticsSummary(),
-                    getAnalyticsPriority(),
-                    getAnalyticsDaily()
-                ]);
+                const summaryData = await getAnalyticsSummary();
                 setSummary(summaryData);
-                setPriorityData(priorityData);
-                setDailyData(dailyData);
             } catch (error) {
                 console.error('Error loading analytics:', error);
             } finally {
@@ -32,7 +23,7 @@ const Dashboard = () => {
         loadAnalytics();
     }, []);
 
-    const COLORS = ['#ef4444', '#f59e0b', '#10b981']; // High, Medium, Low
+
 
     if (loading) return <div className="container">Loading dashboard...</div>;
 
@@ -115,49 +106,6 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Charts */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-                <div className="card">
-                    <h3 style={{ marginTop: 0 }}>Tasks by Priority</h3>
-                    <div style={{ height: '300px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={priorityData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {priorityData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.name === 'High' ? '#ef4444' : entry.name === 'Medium' ? '#f59e0b' : '#10b981'} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                                <Legend />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                <div className="card">
-                    <h3 style={{ marginTop: 0 }}>Completed Tasks (Last 7 Days)</h3>
-                    <div style={{ height: '300px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={dailyData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" />
-                                <YAxis allowDecimals={false} />
-                                <Tooltip />
-                                <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };

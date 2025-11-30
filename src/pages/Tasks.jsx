@@ -265,7 +265,6 @@ const Tasks = () => {
                         >
                             <option value="Newest">Newest First</option>
                             <option value="Oldest">Oldest First</option>
-                            <option value="Priority">Priority</option>
                             <option value="Manual">Custom Order (Drag & Drop)</option>
                         </select>
 
@@ -288,10 +287,6 @@ const Tasks = () => {
                             {filteredTasks.sort((a, b) => {
                                 if (sortBy === 'Newest') return new Date(b.createdAt) - new Date(a.createdAt);
                                 if (sortBy === 'Oldest') return new Date(a.createdAt) - new Date(b.createdAt);
-                                if (sortBy === 'Priority') {
-                                    const priorityMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
-                                    return priorityMap[b.priority] - priorityMap[a.priority];
-                                }
                                 if (sortBy === 'Manual') return (a.order || 0) - (b.order || 0);
                                 return 0;
                             }).map(task => {
@@ -302,42 +297,49 @@ const Tasks = () => {
                                             height: '100%',
                                             borderLeft: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done'
                                                 ? '4px solid var(--danger)'
-                                                : 'none'
+                                                : task.status === 'Done'
+                                                    ? '4px solid var(--success)'
+                                                    : task.status === 'In Progress'
+                                                        ? '4px solid var(--warning)'
+                                                        : '4px solid var(--primary)',
                                         }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'flex-start' }}>
                                                 <h3 style={{ margin: 0 }}>{task.title}</h3>
                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+
                                                     {task.project && (
                                                         <span className="badge" style={{ background: task.project.color, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                                             <FaFolder size={10} /> {task.project.name}
                                                         </span>
                                                     )}
-                                                    <span className={`badge badge-${task.status.toLowerCase().replace(' ', '-')}`}>
+                                                    {task.dueDate && (
+                                                        <span style={{
+                                                            fontSize: '0.8rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.25rem',
+                                                            color: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? 'var(--danger)' : 'var(--primary)',
+                                                            background: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                                            padding: '0.25rem 0.5rem',
+                                                            borderRadius: '4px',
+                                                            fontWeight: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? 'bold' : 'normal'
+                                                        }}>
+                                                            <FaCalendar size={10} />
+                                                            {format(new Date(task.dueDate), 'do MMM yyyy')}
+                                                            {task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done'}
+                                                        </span>
+                                                    )}
+                                                    {/* <span className={`badge badge-${task.status.toLowerCase().replace(' ', '-')}`}>
                                                         {task.status}
-                                                    </span>
+                                                    </span> */}
+
                                                 </div>
                                             </div>
                                             <p style={{ color: 'var(--text-muted)', margin: '0 0 1rem 0' }}>{task.description}</p>
 
                                             {/* Tags & Due Date */}
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                                                {task.dueDate && (
-                                                    <span style={{
-                                                        fontSize: '0.8rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.25rem',
-                                                        color: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? 'var(--danger)' : 'var(--primary)',
-                                                        background: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                                        padding: '0.25rem 0.5rem',
-                                                        borderRadius: '4px',
-                                                        fontWeight: task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' ? 'bold' : 'normal'
-                                                    }}>
-                                                        <FaCalendar size={10} />
-                                                        {format(new Date(task.dueDate), 'MMM d')}
-                                                        {task.dueDate && isBefore(new Date(task.dueDate), new Date()) && !isToday(new Date(task.dueDate)) && task.status !== 'Done' && ' (Overdue)'}
-                                                    </span>
-                                                )}
+
                                                 {task.tags && task.tags.map((tag, i) => (
                                                     <span key={i} style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)', background: 'var(--background)', padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
                                                         <FaTag size={10} /> {tag}
@@ -346,12 +348,11 @@ const Tasks = () => {
                                             </div>
 
                                             <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                                                <span>Priority: <span style={{ color: 'var(--text-main)' }}>{task.priority}</span></span>
-                                                <span>Subtasks: {task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length}</span>
+                                                <span>Subtasks: {task.subtasks.filter(s => s.status === 'Done').length}/{task.subtasks.length}</span>
                                             </div>
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-                                                <span>Created: {format(new Date(task.createdAt), 'MMM d, h:mm a')}</span>
-                                                <span>Updated: {format(new Date(task.updatedAt), 'MMM d, h:mm a')}</span>
+                                                <span>Created: {format(new Date(task.createdAt), 'do MMM yyyy')}</span>
+                                                <span>Updated: {format(new Date(task.updatedAt), 'do MMM yyyy')}</span>
                                             </div>
                                         </div>
                                     </Link>
@@ -409,31 +410,17 @@ const Tasks = () => {
                                         onChange={e => setNewTask({ ...newTask, description: e.target.value })}
                                     />
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Priority</label>
-                                        <select
-                                            className="input"
-                                            value={newTask.priority}
-                                            onChange={e => setNewTask({ ...newTask, priority: e.target.value })}
-                                        >
-                                            <option>Low</option>
-                                            <option>Medium</option>
-                                            <option>High</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Status</label>
-                                        <select
-                                            className="input"
-                                            value={newTask.status}
-                                            onChange={e => setNewTask({ ...newTask, status: e.target.value })}
-                                        >
-                                            <option>Todo</option>
-                                            <option>In Progress</option>
-                                            <option>Done</option>
-                                        </select>
-                                    </div>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Status</label>
+                                    <select
+                                        className="input"
+                                        value={newTask.status}
+                                        onChange={e => setNewTask({ ...newTask, status: e.target.value })}
+                                    >
+                                        <option>Todo</option>
+                                        <option>In Progress</option>
+                                        <option>Done</option>
+                                    </select>
                                 </div>
                                 <div style={{ marginBottom: '1rem' }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Project</label>
@@ -472,7 +459,7 @@ const Tasks = () => {
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </div >
                 )
             }
         </div >
