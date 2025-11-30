@@ -5,8 +5,6 @@ import { FaArrowLeft, FaTrash, FaCheck, FaHistory, FaPlus, FaTimes, FaEdit, FaSe
 import { format, isBefore, isToday } from 'date-fns';
 
 const SubtaskItem = ({ sub, onToggle, onDelete, onEdit }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-
     const priorityColors = {
         'High': 'var(--danger)',
         'Medium': 'var(--warning)',
@@ -21,7 +19,10 @@ const SubtaskItem = ({ sub, onToggle, onDelete, onEdit }) => {
             borderLeft: `4px solid ${priorityColors[sub.priority] || 'var(--border)'}`,
             opacity: sub.isCompleted ? 0.7 : 1,
             transition: 'all 0.2s ease',
-            position: 'relative'
+            position: 'relative',
+            minWidth: 0,
+            maxWidth: '100%',
+            boxSizing: 'border-box'
         }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.5rem' }}>
                 <button
@@ -39,11 +40,12 @@ const SubtaskItem = ({ sub, onToggle, onDelete, onEdit }) => {
                     {sub.isCompleted && <FaCheck size={12} />}
                 </button>
 
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <span style={{
                             textDecoration: sub.isCompleted ? 'line-through' : 'none',
-                            fontWeight: '600', fontSize: '1.1rem', color: 'var(--text-main)'
+                            fontWeight: '600', fontSize: '1.1rem', color: 'var(--text-main)',
+                            wordBreak: 'break-word'
                         }}>
                             {sub.title}
                         </span>
@@ -63,27 +65,16 @@ const SubtaskItem = ({ sub, onToggle, onDelete, onEdit }) => {
             </div>
 
             {sub.description && (
-                <div style={{ marginLeft: '2.5rem' }}>
+                <div style={{ marginLeft: '2.5rem', minWidth: 0 }}>
                     <p style={{
                         margin: 0, fontSize: '0.95rem', color: 'var(--text-muted)',
-                        whiteSpace: isExpanded ? 'pre-wrap' : 'nowrap',
-                        overflow: isExpanded ? 'visible' : 'hidden',
-                        textOverflow: isExpanded ? 'clip' : 'ellipsis',
+                        whiteSpace: 'pre-wrap',
                         lineHeight: '1.6',
-                        cursor: 'pointer'
-                    }}
-                        onClick={() => setIsExpanded(!isExpanded)}
-                    >
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere'
+                    }}>
                         {sub.description}
                     </p>
-                    {sub.description.length > 50 && (
-                        <button
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', padding: '0.25rem 0', cursor: 'pointer', marginTop: '0.25rem' }}
-                        >
-                            {isExpanded ? 'Show Less' : 'Show More'}
-                        </button>
-                    )}
                 </div>
             )}
         </div>
@@ -461,7 +452,7 @@ const TaskDetail = () => {
                 </div >
 
                 {/* History Sidebar */}
-                < div className="card history-card" >
+                <div className="card history-card">
                     <div className="history-header">
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <FaHistory /> History
@@ -483,14 +474,14 @@ const TaskDetail = () => {
                             {history.map((item) => (
                                 <div key={item._id} className="timeline-item">
                                     <div className="timeline-dot"></div>
-                                    <div className="timeline-content">
+                                    <div className="timeline-content" style={{ minWidth: 0 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                             <p style={{ margin: '0 0 0.25rem 0', fontWeight: '600', fontSize: '0.9rem' }}>{item.action}</p>
                                             <button onClick={() => handleDeleteHistory(item._id)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.5, padding: 0 }}>
                                                 <FaTimes size={12} />
                                             </button>
                                         </div>
-                                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{item.details}</p>
+                                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>{item.details}</p>
                                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', opacity: 0.7, display: 'block', marginTop: '0.5rem' }}>
                                             {format(new Date(item.timestamp), 'MMM d, h:mm a')}
                                         </span>
@@ -504,55 +495,53 @@ const TaskDetail = () => {
                             )}
                         </div>
                     </div>
-                </div >
-            </div >
+                </div>
+            </div>
 
             {/* Add/Edit Subtask Modal */}
-            {
-                isSubtaskModalOpen && (
-                    <div className="modal-overlay" onClick={(e) => {
-                        if (e.target.className === 'modal-overlay') setIsSubtaskModalOpen(false);
-                    }}>
-                        <div className="modal-content">
-                            <div className="modal-handle"></div>
-                            <h3 style={{ marginTop: 0 }}>{editingSubtask ? 'Edit Subtask' : 'Add New Subtask'}</h3>
-                            <form onSubmit={handleSubtaskSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <input
+            {isSubtaskModalOpen && (
+                <div className="modal-overlay" onClick={(e) => {
+                    if (e.target.className === 'modal-overlay') setIsSubtaskModalOpen(false);
+                }}>
+                    <div className="modal-content">
+                        <div className="modal-handle"></div>
+                        <h3 style={{ marginTop: 0 }}>{editingSubtask ? 'Edit Subtask' : 'Add New Subtask'}</h3>
+                        <form onSubmit={handleSubtaskSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <input
+                                className="input"
+                                placeholder="Subtask Title"
+                                value={newSubtask}
+                                onChange={e => setNewSubtask(e.target.value)}
+                                required
+                            />
+                            <textarea
+                                className="input"
+                                placeholder="Subtask Details (Optional)"
+                                rows="8"
+                                value={newSubtaskDescription}
+                                onChange={e => setNewSubtaskDescription(e.target.value)}
+                            />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <select
                                     className="input"
-                                    placeholder="Subtask Title"
-                                    value={newSubtask}
-                                    onChange={e => setNewSubtask(e.target.value)}
-                                    required
-                                />
-                                <textarea
-                                    className="input"
-                                    placeholder="Subtask Details (Optional)"
-                                    rows="8"
-                                    value={newSubtaskDescription}
-                                    onChange={e => setNewSubtaskDescription(e.target.value)}
-                                />
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <select
-                                        className="input"
-                                        style={{ width: '150px' }}
-                                        value={newSubtaskPriority}
-                                        onChange={e => setNewSubtaskPriority(e.target.value)}
-                                    >
-                                        <option value="Low">Low Priority</option>
-                                        <option value="Medium">Medium Priority</option>
-                                        <option value="High">High Priority</option>
-                                    </select>
-                                    <div style={{ display: 'flex', gap: '1rem' }}>
-                                        <button type="button" onClick={() => setIsSubtaskModalOpen(false)} className="btn btn-secondary">Cancel</button>
-                                        <button type="submit" className="btn btn-primary">{editingSubtask ? 'Save Changes' : 'Add Subtask'}</button>
-                                    </div>
+                                    style={{ width: '150px' }}
+                                    value={newSubtaskPriority}
+                                    onChange={e => setNewSubtaskPriority(e.target.value)}
+                                >
+                                    <option value="Low">Low Priority</option>
+                                    <option value="Medium">Medium Priority</option>
+                                    <option value="High">High Priority</option>
+                                </select>
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <button type="button" onClick={() => setIsSubtaskModalOpen(false)} className="btn btn-secondary">Cancel</button>
+                                    <button type="submit" className="btn btn-primary">{editingSubtask ? 'Save Changes' : 'Add Subtask'}</button>
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+        </div>
     );
 };
 

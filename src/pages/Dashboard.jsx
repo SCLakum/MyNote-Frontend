@@ -116,7 +116,7 @@ const Dashboard = () => {
             </div>
 
             {/* Charts */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                 <div className="card">
                     <h3 style={{ marginTop: 0 }}>Tasks by Priority</h3>
                     <div style={{ height: '300px' }}>
