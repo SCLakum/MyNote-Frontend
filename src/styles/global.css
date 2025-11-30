@@ -1,0 +1,493 @@
+@import './variables.css';
+
+/* =========================================
+   Base Styles
+   ========================================= */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--surface);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    background: var(--surface-hover);
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+}
+
+.input {
+    background: var(--background);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input:focus {
+    border-color: var(--primary);
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.badge-todo {
+    background: rgba(148, 163, 184, 0.1);
+    color: var(--text-muted);
+}
+
+.badge-progress {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+}
+
+.badge-done {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+/* =========================================
+   Layout & Navigation Styles
+   ========================================= */
+.layout-header {
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.main-nav {
+    display: flex;
+    gap: 0.5rem;
+    pointer-events: auto;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+}
+
+.nav-link:hover {
+    color: var(--text-main);
+    background: var(--surface);
+}
+
+.nav-link.active {
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+/* =========================================
+   History Section Styles
+   ========================================= */
+.history-card {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
+}
+
+.history-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.history-list {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: var(--radius-full);
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-left: 2px solid var(--border);
+}
+
+.timeline-item:last-child {
+    border-left: 2px solid transparent;
+    padding-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -5px;
+    top: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 0 4px var(--surface);
+}
+
+.timeline-content {
+    background: var(--background);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.recent-activity-item {
+    text-decoration: none;
+    color: inherit;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    transition: background 0.2s;
+}
+
+.recent-activity-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.task-detail-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.tasks-filter-bar {
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* =========================================
+   Modal Styles (Desktop Default)
+   ========================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    padding: 1rem;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 500px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--border);
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* =========================================
+   Mobile Styles
+   ========================================= */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--spacing-md);
+        padding-bottom: 5rem;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .dashboard-header .btn {
+        width: 100%;
+    }
+
+    /* Hide breadcrumb navigation on mobile */
+    .breadcrumb-nav {
+        display: none !important;
+    }
+
+    .recent-activity-item {
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+    }
+
+    .recent-activity-item>div:nth-child(2),
+    .recent-activity-item>div:nth-child(3) {
+        display: none;
+    }
+
+    .task-detail-grid {
+        grid-template-columns: 1fr;
+        padding-bottom: 4rem;
+    }
+
+    .history-card {
+        max-height: none;
+    }
+
+    .tasks-filter-bar {
+        padding: 1rem;
+    }
+
+    .mobile-filters-container {
+        width: 100%;
+        margin-top: 0.5rem;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .filter-group select {
+        width: 100%;
+    }
+
+    /* Mobile Header - Not fixed, scrolls with content */
+    .layout-header {
+        position: relative;
+        padding: 1rem;
+        justify-content: flex-end;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* Remove top padding on mobile since header is not fixed */
+    main {
+        padding-top: 0 !important;
+    }
+
+    /* Mobile Navigation - Bottom bar */
+    .main-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        padding: 0.5rem 0;
+        display: flex;
+        justify-content: space-around;
+        z-index: 1000;
+        gap: 0;
+    }
+
+    .nav-link {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        padding: 0.5rem;
+        font-size: 0.7rem;
+        text-align: center;
+        min-height: 60px;
+        border-radius: 0;
+    }
+
+    .nav-link svg {
+        font-size: 1.25rem;
+    }
+
+    .nav-link.active {
+        background: transparent;
+        color: var(--primary);
+    }
+
+    .fab-btn {
+        position: fixed;
+        bottom: 5rem;
+        right: 1rem;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-glow);
+        z-index: 999;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .fab-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* TaskDetail Mobile Improvements */
+    .card {
+        padding: 1rem;
+    }
+
+    .card h2 {
+        font-size: 1.25rem;
+    }
+
+    .card h3 {
+        font-size: 1.1rem;
+    }
+
+    /* Back button on mobile */
+    .btn-secondary {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .modal-overlay {
+        align-items: flex-end !important;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        max-width: none !important;
+        border-radius: 24px 24px 0 0 !important;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        margin: 0 !important;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-handle {
+        width: 40px;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        margin: 0 auto 1.5rem auto;
+        display: block;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+
+        to {
+            transform: translateY(0);
+        }
+    }
+}
